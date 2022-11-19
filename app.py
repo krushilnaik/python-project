@@ -11,6 +11,10 @@ app = Flask(__name__)
 def index():
     return render_template('home.html')
 
+@app.post("/upload")
+def upload():
+    return "Upload request received"
+
 
 @app.errorhandler(404)
 def invalid_route(e):
