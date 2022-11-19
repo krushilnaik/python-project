@@ -2,12 +2,13 @@
 Smoothstack Evaluation Week Final Project
 """
 
-from flask import Flask, render_template, jsonify, request, flash, redirect
+from flask import Flask, render_template, jsonify, request, flash, redirect, url_for
 from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
 
+app.secret_key = "55e36cb88d9251f1bd812ec5242e5ead"
 
 @app.get('/health')
 def check():
@@ -43,16 +44,29 @@ def upload():
 
     if "file" not in request.files:
         flash("No file part")
+        return redirect(url_for('index'))
 
     file = request.files["file"]
 
     if not file.filename:
         flash("No file uploaded")
-        return redirect(request.url)
+        return redirect(url_for('index'))
 
     filename = secure_filename(file.filename)
 
     file.save(os.path.join('uploads', filename))
+
+    # check if file has already been parsed
+
+    # try to infer month and year from file. If not possible, move to ERROR
+
+    # parse file with openpyxl
+
+    # check if all three tabs are present (if not, move to ERROR)
+
+    # write data for that month and year to mysql
+
+    # move file to ARCHIVED and update processed.lst
 
     return "Upload request received"
 
