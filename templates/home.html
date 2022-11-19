@@ -2,8 +2,8 @@
 
 {% block content %}
   <h1>Home page</h1>
-  <form action="/upload" method="post">
-    <input type="file" name="data" id="data">
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" id="file">
     <button type="submit">Submit</button>
   </form>
 {% endblock %}
