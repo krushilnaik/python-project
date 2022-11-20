@@ -17,8 +17,14 @@ class Summary(db.Model):
     csat = db.Column(db.String(7))
 
     def as_dict(self):
+        """
+        Return the Summary object as a dictionary of properly formatted strings
+
+        Returns:
+            dict: Dictionary mapping the columns to formatted values
+        """
         return {
-            "Calls Offered": int(self.calls_offered),
+            "Calls Offered": f"{int(self.calls_offered):,}",
             "Abandon after 30s": f'{float(self.abandoned_after_30):.2%}',
             "FCR": f'{float(self.fcr):.2%}',
             "DSAT": f'{float(self.dsat):.2%}',

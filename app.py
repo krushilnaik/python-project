@@ -137,10 +137,10 @@ def upload():
         month = MONTHS[parts[0].lower()[:3]]
         year = parts[1][:4]
 
-        year_month = f"{year}-{month}"
-
+        # fetch the first entry found that was recorded on the month in question
+        # (between the 1st and 31st of that month)
         test = Summary.query.filter(Summary.time_period.between(
-            f'{year_month}-01', f'{year_month}-31')
+            f'{year}-{month}-01', f'{year}-{month}-31')
         ).first()
 
         # move file to ARCHIVED
@@ -153,9 +153,21 @@ def upload():
 
 @app.errorhandler(404)
 def invalid_route(e):
+    """
+    Catch-all route for any unrecognized URLs
+
+    Returns:
+        Template: Custom 404 page
+    """
     return render_template('404.html')
 
 
 @app.errorhandler(500)
 def server_error(e):
+    """
+    Custom page to render in the event of a server-side error
+
+    Returns:
+        Template: Custom 500 page
+    """
     return render_template('500.html')
