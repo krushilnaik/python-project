@@ -16,9 +16,22 @@ services:
 
   database:
     container_name: mysql
-    image: mysql:latest
+    image: mysql:5.7
+    restart: always
     environment:
-      - MYSQL_DATABASE=smoothstack
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE: smoothstack
+    # volumes:
+    #   - ./db:/docker-entrypoint-initdb.d
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
     ports:
-      - "3306:3306"
+      - 8080:80
+    restart: always
+    depends_on:
+      - database
+    environment:
+      PMA_HOST: database
