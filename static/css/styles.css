@@ -82,3 +82,25 @@ footer {
   opacity: 0.3;
   text-align: center;
 }
+
+.flashes {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  list-style-type: none;
+}
+
+.flashes li {
+  width: max-content;
+  animation: flash 350ms 5 alternate;
+}
+
+@keyframes flash {
+  from {
+    color: honeydew;
+  }
+  to {
+    color: tomato;
+  }
+}
