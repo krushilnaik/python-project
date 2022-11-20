@@ -1,6 +1,12 @@
-from . import db
-from pydantic import BaseModel, validator, ValidationError
+"""
+Representation of the 'summary' MySQL table
+"""
+
 from datetime import datetime
+
+from pydantic import BaseModel, validator
+
+from . import db
 
 
 class Summary(db.Model):
@@ -66,8 +72,8 @@ class SummaryValidator(BaseModel):
 
         try:
             if float(value) > 1.0:
-                raise ValidationError("Percentages must be less than 100%")
+                raise ValueError("Percentages must be less than 1.0")
 
-            return value
-        except ValidationError as e:
-            raise e
+            return float(value)
+        except ValueError as error:
+            raise error

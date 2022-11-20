@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from werkzeug.utils import secure_filename
 
 from models import db
-from models.Summary import Summary, SummaryValidator
+from models.summary import Summary, SummaryValidator
 
 # load environment variables
 load_dotenv()
@@ -28,8 +28,8 @@ DATABASE = os.getenv("MYSQL_DATABASE")
 # set up logging
 
 file_handler = RotatingFileHandler('flask-student-info.log',
-                                    maxBytes=16384,
-                                    backupCount=20)
+                                   maxBytes=16384,
+                                   backupCount=20)
 file_formatter = logging.Formatter(
     '%(asctime)s %(levelname)s: %(message)s [@%(filename)s:%(lineno)d]'
 )
@@ -143,7 +143,8 @@ def upload():
     # check if all three tabs are present (if not, move to ERROR)
     if len(workbook.sheetnames) != 3 or set(workbook.sheetnames) != VALID_SHEETS:
         flash("Error: malformed speadsheet")
-        app.logger.error(f"One or more required spreadsheets not found in {filename}")
+        app.logger.error(
+            f"One or more required spreadsheets not found in {filename}")
         os.replace(UPLOADS / filename, ERROR / filename)
         return redirect(url_for("index"))
 
@@ -188,7 +189,6 @@ def upload():
 
         app.logger.info(f"Searching database for info on {year}-{month}")
 
-
         # fetch the first entry found that was recorded on the month in question
         # (between the 1st and 31st of that month)
         test = Summary.query.filter(Summary.time_period.between(
@@ -199,7 +199,6 @@ def upload():
         # and return a view with the data
         os.replace(UPLOADS / filename, ARCHIVE / filename)
         app.logger.info(f"{filename} moved from UPLOADS to ARCHIVE")
-
 
         return render_template("results.html", value=test.as_dict())
     except ValidationError as error:
@@ -219,15 +218,3 @@ def invalid_route(error):
 
     app.logger.error(error)
     return render_template('404.html')
-
-
-@app.errorhandler(500)
-def server_error(error):
-    """
-    Custom page to render in the event of a server-side error
-
-    Returns:
-        Template: Custom 500 page
-    """
-    app.logger.error(error)
-    return render_template('500.html')
