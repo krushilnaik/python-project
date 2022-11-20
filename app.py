@@ -2,13 +2,16 @@
 Smoothstack Evaluation Week Final Project
 """
 
-from flask import Flask, render_template, jsonify, request, flash, redirect, url_for
-from openpyxl import load_workbook
-from models import db
-from pathlib import Path
-from models.Summary import Summary, SummaryValidator
-from werkzeug.utils import secure_filename
 import os
+from pathlib import Path
+
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   url_for)
+from openpyxl import load_workbook
+from werkzeug.utils import secure_filename
+
+from models import db
+from models.Summary import Summary, SummaryValidator
 
 app = Flask(__name__)
 
