@@ -159,7 +159,11 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-
+# NodeJS stuff
 package.json
+
+# excel directories
 examples
 uploads
+archive
+error

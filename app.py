@@ -5,6 +5,7 @@ Smoothstack Evaluation Week Final Project
 from flask import Flask, render_template, jsonify, request, flash, redirect, url_for
 from openpyxl import load_workbook
 from models import db
+from pathlib import Path
 from models.Summary import Summary
 from werkzeug.utils import secure_filename
 import os
@@ -20,9 +21,6 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-VALID_SHEETS = ["Summary Rolling MoM",
-                "VOC Rolling MoM", "Monthly Verbatim Statements"]
-
 MONTHS = {
     "jan": 1,
     "feb": 2,
@@ -37,6 +35,20 @@ MONTHS = {
     "nov": 11,
     "dec": 12,
 }
+
+SUMMARY_SHEET = "Summary Rolling MoM"
+VOC_SHEET = "VOC Rolling MoM"
+VERBATIM_SHEET = "Monthly Verbatim Statements"
+
+VALID_SHEETS = set([
+    "Summary Rolling MoM",
+    "VOC Rolling MoM",
+    "Monthly Verbatim Statements"
+])
+
+UPLOADS = Path('./uploads')
+ARCHIVE = Path('./archive')
+ERROR = Path('./error')
 
 
 @app.get('/health')
@@ -71,10 +83,6 @@ def upload():
         _type_: _description_
     """
 
-    if "file" not in request.files:
-        flash("No file part")
-        return redirect(url_for('index'))
-
     file = request.files["file"]
 
     if not file.filename:
@@ -83,59 +91,64 @@ def upload():
 
     filename = secure_filename(file.filename)
 
-    file.save(os.path.join('uploads', filename))
-
     # check if file has already been parsed
+    with open('processed.lst', 'r+') as processed:
+        if filename in processed.read():
+            flash(f"{filename} has already been processed")
+            return redirect(url_for('index'))
+        else:
+            processed.write(filename + "\n")
+
+    file.save(UPLOADS / filename)
 
     # parse file with openpyxl
-
-    wb = load_workbook(os.path.join('uploads', filename), data_only=True)
+    wb = load_workbook(UPLOADS / filename, data_only=True)
 
     # check if all three tabs are present (if not, move to ERROR)
+    if len(wb.sheetnames) != 3 or set(wb.sheetnames) != VALID_SHEETS:
+        flash("Error: malformed speadsheet")
+        os.replace(UPLOADS / filename, ERROR / filename)
+        return redirect(url_for("index"))
 
-    if wb.sheetnames != VALID_SHEETS:
-        pass
-
-    SHEET = wb["Summary Rolling MoM"]
-
+    SHEET = wb[SUMMARY_SHEET]
     COLUMNS = ["A", "B", "C", "D", "E", "F"]
 
-    for r in range(2, 14):
-        values = [SHEET[f"{c}{r}"].value for c in COLUMNS]
-
-        # write data for that month and year to mysql
-        row = Summary(
-            time_period=values[0],
-            calls_offered=values[1],
-            abandoned_after_30=values[2],
-            fcr=values[3],
-            dsat=values[4],
-            csat=values[5],
-        )
-
-        db.session.add(row)
-        db.session.commit()
-
-    # try to infer month and year from file. If not possible, move to ERROR
     try:
-        parts = filename.split("_")
+        # A well formed sheet has relavent data in rows 2 to 14 (for the 12 months)
+        for r in range(2, 14):
+            values = [SHEET[f"{c}{r}"].value for c in COLUMNS]
 
-        month = MONTHS[parts[-2].lower()[:3]]
-        year = parts[-1][:4]
+            # write data for that month and year to mysql
+            row = Summary(
+                time_period=values[0],
+                calls_offered=values[1],
+                abandoned_after_30=values[2],
+                fcr=values[3],
+                dsat=values[4],
+                csat=values[5],
+            )
+
+            db.session.add(row)
+            db.session.commit()
+
+        # try to infer month and year from file. If not possible, move to ERROR
+        parts = filename.split("_")[-2:]
+
+        month = MONTHS[parts[0].lower()[:3]]
+        year = parts[1][:4]
 
         year_month = f"{year}-{month}"
-
-        # move file to ARCHIVED and update processed.lst
-        with open("./processed.lst", mode="a") as processed:
-            processed.write(filename + "\n")
 
         test = Summary.query.filter(Summary.time_period.between(
             f'{year_month}-01', f'{year_month}-31')
         ).first()
 
+        # move file to ARCHIVED
+        os.replace(UPLOADS / filename, ARCHIVE / filename)
+
         return render_template("results.html", value=test.as_dict())
-    except KeyError:
-        print("Failed")
+    except:
+        os.replace(UPLOADS / filename, ERROR / filename)
 
 
 @app.errorhandler(404)
