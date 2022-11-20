@@ -6,7 +6,7 @@ from flask import Flask, render_template, jsonify, request, flash, redirect, url
 from openpyxl import load_workbook
 from models import db
 from pathlib import Path
-from models.Summary import Summary
+from models.Summary import Summary, SummaryValidator
 from werkzeug.utils import secure_filename
 import os
 
@@ -50,6 +50,10 @@ UPLOADS = Path('./uploads')
 ARCHIVE = Path('./archive')
 ERROR = Path('./error')
 
+# create the above directories if they don't exist
+for dir in [UPLOADS, ARCHIVE, ERROR]:
+    dir.mkdir(parents=True, exist_ok=True)
+
 
 @app.get('/health')
 def check():
@@ -89,6 +93,7 @@ def upload():
         flash("No file uploaded")
         return redirect(url_for('index'))
 
+    # cleanse file path of crazy characters
     filename = secure_filename(file.filename)
 
     # check if file has already been parsed
@@ -118,7 +123,16 @@ def upload():
         for r in range(2, 14):
             values = [SHEET[f"{c}{r}"].value for c in COLUMNS]
 
-            # write data for that month and year to mysql
+            SummaryValidator(
+                time_period=values[0],
+                calls_offered=values[1],
+                abandoned_after_30=values[2],
+                fcr=values[3],
+                dsat=values[4],
+                csat=values[5]
+            )
+
+            # write validated data for that month and year to mysql
             row = Summary(
                 time_period=values[0],
                 calls_offered=values[1],
@@ -143,7 +157,7 @@ def upload():
             f'{year}-{month}-01', f'{year}-{month}-31')
         ).first()
 
-        # move file to ARCHIVED
+        # move file to ARCHIVE
         os.replace(UPLOADS / filename, ARCHIVE / filename)
 
         return render_template("results.html", value=test.as_dict())

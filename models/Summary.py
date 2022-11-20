@@ -1,4 +1,6 @@
 from . import db
+from pydantic import BaseModel, validator, ValidationError
+from datetime import datetime
 
 
 class Summary(db.Model):
@@ -10,11 +12,11 @@ class Summary(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     time_period = db.Column(db.Date)
-    calls_offered = db.Column(db.String(8))
-    abandoned_after_30 = db.Column(db.String(7))
-    fcr = db.Column(db.String(7))
-    dsat = db.Column(db.String(7))
-    csat = db.Column(db.String(7))
+    calls_offered = db.Column(db.Integer)
+    abandoned_after_30 = db.Column(db.Float)
+    fcr = db.Column(db.Float)
+    dsat = db.Column(db.Float)
+    csat = db.Column(db.Float)
 
     def as_dict(self):
         """
@@ -24,9 +26,47 @@ class Summary(db.Model):
             dict: Dictionary mapping the columns to formatted values
         """
         return {
-            "Calls Offered": f"{int(self.calls_offered):,}",
-            "Abandon after 30s": f'{float(self.abandoned_after_30):.2%}',
-            "FCR": f'{float(self.fcr):.2%}',
-            "DSAT": f'{float(self.dsat):.2%}',
-            "CSAT": f'{float(self.csat):.2%}',
+            "Calls Offered": f"{self.calls_offered:,}",
+            "Abandon after 30s": f'{self.abandoned_after_30:.2%}',
+            "FCR": f'{self.fcr:.2%}',
+            "DSAT": f'{self.dsat:.2%}',
+            "CSAT": f'{self.csat:.2%}',
         }
+
+
+class SummaryValidator(BaseModel):
+    """
+    Helper class to validate data before being entered into the database
+
+    Raises:
+        ValidationError: in the event one of the fields failed validation
+    """
+
+    time_period: datetime
+    calls_offered: int
+    abandoned_after_30: float
+    fcr: float
+    dsat: float
+    csat: float
+
+    @validator("abandoned_after_30", "fcr", "dsat", "csat")
+    def less_than_one(cls, value):
+        """
+        Percentages are stored in the database as a floating point betweeo 0 and 1.
+        Make sure the data matches those constraints.
+
+        Raises:
+            ValidationError:
+
+        Returns:
+            _type_: _description_
+        """
+
+        try:
+            if float(value) > 1.0:
+                raise ValidationError("Percentages must be less than 100%")
+
+            print("Validation successfull!")
+            return value
+        except ValidationError as e:
+            raise e
