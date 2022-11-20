@@ -1,6 +1,7 @@
 {% extends 'layouts/base.html' %}
 
 {% block content %}
+  <h1>Analysis of {{value["Time Period"]}}</h1>
   <span>Calls Offered : {{value["Calls Offered"]}}</span>
   <span>Abandon after 30s : {{value["Abandon after 30s"]}}</span>
   <span>FCR : {{value["FCR"]}}</span>

@@ -25,7 +25,9 @@ class Summary(db.Model):
         Returns:
             dict: Dictionary mapping the columns to formatted values
         """
+
         return {
+            "Time Period": f"{self.time_period:%B %Y}",
             "Calls Offered": f"{self.calls_offered:,}",
             "Abandon after 30s": f'{self.abandoned_after_30:.2%}',
             "FCR": f'{self.fcr:.2%}',
@@ -66,7 +68,6 @@ class SummaryValidator(BaseModel):
             if float(value) > 1.0:
                 raise ValidationError("Percentages must be less than 100%")
 
-            print("Validation successfull!")
             return value
         except ValidationError as e:
             raise e

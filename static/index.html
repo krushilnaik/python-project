@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"
+    />
+
+    <title>Evaluation Project</title>
+  </head>
+  <body>
+    <main>
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="fileInput" id="fileLabel" aria-label="Upload an Excel file">
+          <div class="label" ondrop="dropHandler(event);">
+            <i class="fa fa-cloud-upload"></i>
+            <span>Upload an Excel file</span>
+          </div>
+          <span id="filename">or drag and drop here</span>
+        </label>
+        <input type="file" name="file" id="fileInput" />
+        <button type="submit">Submit</button>
+      </form>
+    </main>
+  </body>
+</html>

@@ -97,7 +97,10 @@ def upload():
     filename = secure_filename(file.filename)
 
     # check if file has already been parsed
-    with open('processed.lst', 'r+') as processed:
+    with open('processed.lst', 'a+') as processed:
+        # jump to the start of the file to begin reading
+        processed.seek(0)
+
         if filename in processed.read():
             flash(f"{filename} has already been processed")
             return redirect(url_for('index'))
