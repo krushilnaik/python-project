@@ -76,3 +76,9 @@ button[type="submit"] {
 button[type="submit"]:hover {
   color: tomato;
 }
+
+footer {
+  padding: 1rem;
+  opacity: 0.3;
+  text-align: center;
+}
