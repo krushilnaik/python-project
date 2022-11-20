@@ -128,6 +128,7 @@ def upload():
         for r in range(2, 14):
             values = [SHEET[f"{c}{r}"].value for c in COLUMNS]
 
+            # run each row through the validator
             SummaryValidator(
                 time_period=values[0],
                 calls_offered=values[1],
@@ -137,7 +138,7 @@ def upload():
                 csat=values[5]
             )
 
-            # write validated data for that month and year to mysql
+            # load validated data into ORM
             row = Summary(
                 time_period=values[0],
                 calls_offered=values[1],
@@ -147,12 +148,12 @@ def upload():
                 csat=values[5],
             )
 
+            # write row to mysql
             db.session.add(row)
             db.session.commit()
 
         # try to infer month and year from file. If not possible, move to ERROR
         parts = filename.split("_")[-2:]
-
         month = MONTHS[parts[0].lower()[:3]]
         year = parts[1][:4]
 
@@ -162,7 +163,8 @@ def upload():
             f'{year}-{month}-01', f'{year}-{month}-31')
         ).first()
 
-        # move file to ARCHIVE
+        # finished processing, move file to ARCHIVE
+        # and return a view with the data
         os.replace(UPLOADS / filename, ARCHIVE / filename)
 
         return render_template("results.html", value=test.as_dict())
