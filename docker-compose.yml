@@ -11,8 +11,13 @@ services:
     volumes:
       - .:/usr/src/app
     environment:
-      - FLASK_APP=app
-      - FLASK_DEBUG=1
+      FLASK_APP: app
+      FLASK_DEBUG: 1
+      MYSQL_DATABASE: smoothstack
+      MYSQL_HOST: database
+      MYSQL_USER: root
+    depends_on:
+      - database
 
   database:
     container_name: mysql
@@ -24,8 +29,6 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
       MYSQL_ROOT_PASSWORD:
       MYSQL_DATABASE: smoothstack
-    # volumes:
-    #   - ./db:/docker-entrypoint-initdb.d
 
   phpmyadmin:
     container_name: phpmyadmin

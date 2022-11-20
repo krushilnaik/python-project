@@ -1,11 +1,38 @@
 {% extends 'layouts/base.html' %}
 
 {% block content %}
-  <h1>Analysis of {{value["Time Period"]}}</h1>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
+  <!-- <h1>Analysis of {{value["Time Period"]}}</h1>
   <span>Calls Offered : {{value["Calls Offered"]}}</span>
   <span>Abandon after 30s : {{value["Abandon after 30s"]}}</span>
   <span>FCR : {{value["FCR"]}}</span>
   <span>DSAT : {{value["DSAT"]}}</span>
   <span>CSAT : {{value["CSAT"]}}</span>
-  <a href="/">Home</a>
+  <a href="/">Home</a> -->
+  <div class="summary">
+    <h1>Analysis of {{value["Time Period"]}}</h1>
+    <ul>
+      <li>
+        <span class="description">Calls Offered</span>
+        <span class="value">{{value["Calls Offered"]}}</span>
+      </li>
+      <li>
+        <span class="description">Abandon after 30 seconds</span>
+        <span class="value">{{value["Abandon after 30s"]}}</span>
+      </li>
+      <li>
+        <span class="description">FCR</span>
+        <span class="value">{{value["FCR"]}}</span>
+      </li>
+      <li>
+        <span class="description">DSAT</span>
+        <span class="value">{{value["DSAT"]}}</span>
+      </li>
+      <li>
+        <span class="description">CSAT</span>
+        <span class="value">{{value["CSAT"]}}</span>
+      </li>
+    </ul>
+    <a class="button" href="/">Home</a>
+  </div>
 {% endblock %}
