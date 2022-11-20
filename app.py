@@ -5,8 +5,7 @@ Smoothstack Evaluation Week Final Project
 import os
 from pathlib import Path
 
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   url_for)
+from flask import Flask, flash, redirect, render_template, request, url_for
 from openpyxl import load_workbook
 from werkzeug.utils import secure_filename
 
@@ -67,7 +66,7 @@ def check():
         str: "OK" if the request successfully hit the server
     """
 
-    return jsonify({"message": "OK"})
+    return "Ok"
 
 
 @app.route('/')
