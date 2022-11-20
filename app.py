@@ -123,11 +123,17 @@ def upload():
         month = MONTHS[parts[-2].lower()[:3]]
         year = parts[-1][:4]
 
+        year_month = f"{year}-{month}"
+
         # move file to ARCHIVED and update processed.lst
         with open("./processed.lst", mode="a") as processed:
             processed.write(filename + "\n")
 
-        return render_template("results.html", value=f'{year}-{month:02}-##')
+        test = Summary.query.filter(Summary.time_period.between(
+            f'{year_month}-01', f'{year_month}-31')
+        ).first()
+
+        return render_template("results.html", value=test.as_dict())
     except KeyError:
         print("Failed")
 

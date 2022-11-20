@@ -15,3 +15,12 @@ class Summary(db.Model):
     fcr = db.Column(db.String(7))
     dsat = db.Column(db.String(7))
     csat = db.Column(db.String(7))
+
+    def as_dict(self):
+        return {
+            "Calls Offered": int(self.calls_offered),
+            "Abandon after 30s": f'{float(self.abandoned_after_30):.2%}',
+            "FCR": f'{float(self.fcr):.2%}',
+            "DSAT": f'{float(self.dsat):.2%}',
+            "CSAT": f'{float(self.csat):.2%}',
+        }
