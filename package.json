@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "start": "flask --app app run",
+    "test": "pytest --cov --cov-report term-missing",
+    "dev": "flask --app app --debug run"
+  }
+}
