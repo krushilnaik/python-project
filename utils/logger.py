@@ -5,14 +5,6 @@ Set up logger
 import logging
 
 
-file_formatter = logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s [@%(filename)s:%(lineno)d]'
-)
-
-logging.basicConfig(filename='flask_app.log',
-                    encoding='utf-8', level=logging.DEBUG)
-
-
 def info(message):
     """
     Write info message to logger

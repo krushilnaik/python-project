@@ -114,7 +114,7 @@ def upload():
     # check if all three tabs are present (if not, move to ERROR)
     if len(workbook.sheetnames) != 3 or set(workbook.sheetnames) != VALID_SHEETS:
         flash("Error: malformed speadsheet")
-        file_to_errors(filename, error)
+        file_to_errors(filename, f"{filename} doesn't have the expected sheets")
         return goto("index")
 
     try:
@@ -137,7 +137,9 @@ def upload():
 
         active_sheet = workbook[VOC_SHEET]
 
-        #
+        voc_start = "B"
+
+        print(active_sheet[1])
 
         # finished processing, move file to ARCHIVE
         # and return a view with the data
@@ -145,7 +147,9 @@ def upload():
 
         return render_template("results.html", value=summary.as_dict())
     except ValidationError as error:
+        flash(f"Some of the data in {filename} is invalid!")
         file_to_errors(filename, error)
+        return goto("index")
 
 
 @app.errorhandler(404)

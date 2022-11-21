@@ -1,7 +1,8 @@
 """
 Integration tests for Flask app
 """
-
+import pytest
+from pydantic import ValidationError
 from app import app
 
 
@@ -43,7 +44,6 @@ def test_upload_route():
     # clear processed.lst contents
     open('processed.lst', 'w', encoding="utf-8").close()
 
-    print("============ messages ============")
     with app.test_client() as test_client:
         filename = 'examples/expedia_report_monthly_january_2018.xlsx'
 
@@ -73,6 +73,81 @@ def test_upload_route():
 
                 assert flash[0] == 'message'
                 assert flash[1].endswith('has already been processed')
+
+
+def test_upload_invalid_files():
+    """
+    GIVEN a Flask application configured for testing
+    WHEN /upload (POST) is hit with a malformed file in the body
+    THEN the file should be flagged as such and the function should exit
+    """
+
+    # clear processed.lst contents
+    open('processed.lst', 'w', encoding="utf-8").close()
+
+    with app.test_client() as test_client:
+        filename = 'examples/expedia_report_monthly_q1.xlsx'
+
+        with open(filename, 'rb') as file:
+            data = {
+                "file": (file, filename)
+            }
+
+            response = test_client.post('/upload', data=data)
+
+            # it should send ok the first time
+            assert response.status_code == 302
+
+            with test_client.session_transaction() as session:
+                flash = session['_flashes'][0]
+
+                assert flash[0] == 'message'
+                assert flash[1] == "Error: malformed speadsheet"
+
+        filename = 'examples/expedia_report_monthly_march_march.xlsx'
+
+        with open(filename, 'rb') as file:
+            data = {
+                "file": (file, filename)
+            }
+
+            # with pytest.raises(ValueError) as e_info:
+            response = test_client.post('/upload', data=data)
+
+        filename = 'examples/unreal_percent_janubad_2018.xlsx'
+
+        with open(filename, 'rb') as file:
+            data = {
+                "file": (file, filename)
+            }
+
+            response = test_client.post('/upload', data=data)
+
+            assert response.status_code == 302
+
+            with test_client.session_transaction() as session:
+                flash = session['_flashes'][-1]
+
+                assert flash[0] == 'message'
+                assert flash[1].startswith('Some of the data in')
+                assert flash[1].endswith('is invalid!')
+
+        filename = 'examples/missing_sheets_janubad_2018.xlsx'
+
+        with open(filename, 'rb') as file:
+            data = {
+                "file": (file, filename)
+            }
+
+            response = test_client.post('/upload', data=data)
+
+            assert response.status_code == 302
+
+            with test_client.session_transaction() as session:
+                flash = session['_flashes'][-1]
+
+                assert flash[0] == 'message'
+                assert flash[1] == "Error: malformed speadsheet"
 
 
 def test_no_file_uploaded():
