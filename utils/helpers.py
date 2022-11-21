@@ -1,12 +1,19 @@
 """
 Utility functions
 """
+
 import os
 
 from models import db
 from models.summary import Summary, SummaryValidator
+from flask import redirect, url_for
+from .logger import error, info
 
 from utils.constants import UPLOADS, ARCHIVE, ERROR
+
+
+def goto(view):
+    return redirect(url_for(view))
 
 
 def validate_and_write(values: list):
@@ -51,14 +58,18 @@ def file_to_archives(filename):
     Args:
         filename (str): file to move
     """
+    info(f"Finished processing {filename}.")
     os.replace(UPLOADS / filename, ARCHIVE / filename)
+    info(f"Moved {filename} from 'uploads' to 'archive'")
 
 
-def file_to_errors(filename):
+def file_to_errors(filename, err):
     """
     Move a file from uploads folder to archive folder
 
     Args:
         filename (str): file to move
     """
+    error(err)
     os.replace(UPLOADS / filename, ERROR / filename)
+    info(f"Moved {filename} from 'uploads' to 'error'")

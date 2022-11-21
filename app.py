@@ -1,13 +1,10 @@
 """
 Smoothstack Evaluation Week Final Project
 """
-
-import logging
 import os
-from logging.handlers import RotatingFileHandler
 
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, render_template, request
 from openpyxl import load_workbook
 from pydantic import ValidationError
 from werkzeug.utils import secure_filename
@@ -16,7 +13,8 @@ from models import db
 from models.summary import Summary
 from utils.constants import (ARCHIVE, ERROR, MONTHS, SUMMARY_SHEET, UPLOADS,
                              VALID_SHEETS)
-from utils.helpers import file_to_archives, file_to_errors, validate_and_write
+from utils.helpers import (error, file_to_archives, file_to_errors, goto, info,
+                           validate_and_write)
 
 # load environment variables
 load_dotenv()
@@ -26,19 +24,6 @@ app = Flask(__name__)
 HOST = os.getenv("MYSQL_HOST")
 USER = os.getenv("MYSQL_USER")
 DATABASE = os.getenv("MYSQL_DATABASE")
-
-# set up logging
-
-file_handler = RotatingFileHandler('flask-student-info.log',
-                                   maxBytes=16384,
-                                   backupCount=20)
-file_formatter = logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s [@%(filename)s:%(lineno)d]'
-)
-
-file_handler.setFormatter(file_formatter)
-
-app.logger.addHandler(file_handler)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{USER}@{HOST}/{DATABASE}"
 app.secret_key = "55e36cb88d9251f1bd812ec5242e5ead"
@@ -51,7 +36,7 @@ with app.app_context():
 # create the above directories if they don't exist
 for _dir in [UPLOADS, ARCHIVE, ERROR]:
     _dir.mkdir(parents=True, exist_ok=True)
-app.logger.info("Created storage directories")
+info("Created storage directories")
 
 
 @app.get('/health')
@@ -90,7 +75,7 @@ def upload():
 
     if not file.filename:
         flash("No file uploaded")
-        return redirect(url_for('index'))
+        return goto('index')
 
     # cleanse file path of crazy characters
     filename = secure_filename(file.filename)
@@ -102,10 +87,10 @@ def upload():
 
         if filename in processed.read():
             flash(f"{filename} has already been processed")
-            app.logger.info(f"{filename} has already been processed")
-            return redirect(url_for('index'))
+            info(f"{filename} has already been processed")
+            return goto('index')
         else:
-            app.logger.info(f"Starting to process {filename}")
+            info(f"Starting to process {filename}")
             processed.write(filename + "\n")
 
     file.save(UPLOADS / filename)
@@ -120,10 +105,8 @@ def upload():
             raise ValueError("Year could not be inferred from file name")
     except (KeyError, ValueError) as error:
         file_to_errors(filename, error)
-        app.logger.error(error)
-
         flash("Error: malformed speadsheet")
-        return redirect(url_for("index"))
+        return goto("index")
 
     # parse file with openpyxl
     workbook = load_workbook(UPLOADS / filename, data_only=True)
@@ -131,9 +114,8 @@ def upload():
     # check if all three tabs are present (if not, move to ERROR)
     if len(workbook.sheetnames) != 3 or set(workbook.sheetnames) != VALID_SHEETS:
         flash("Error: malformed speadsheet")
-        file_to_errors(filename)
-        app.logger.error(f"Some required sheets are missing!")
-        return redirect(url_for("index"))
+        file_to_errors(filename, error)
+        return goto("index")
 
     active_sheet = workbook[SUMMARY_SHEET]
     data_columns = ["A", "B", "C", "D", "E", "F"]
@@ -145,7 +127,7 @@ def upload():
 
             validate_and_write(values)
 
-        app.logger.info(f"Searching database for info on {year}-{month}")
+        info(f"Searching database for info on {year}-{month}")
 
         # fetch the first entry found that was recorded on the month in question
         # (between the 1st and 31st of that month)
@@ -156,17 +138,14 @@ def upload():
         # finished processing, move file to ARCHIVE
         # and return a view with the data
         file_to_archives(filename)
-        app.logger.info(f"{filename} moved from UPLOADS to ARCHIVE")
 
         return render_template("results.html", value=test.as_dict())
     except ValidationError as error:
-        app.logger.error(error)
-        file_to_errors(filename)
-        app.logger.info(f"{filename} moved from UPLOADS to ERROR")
+        file_to_errors(filename, error)
 
 
 @app.errorhandler(404)
-def invalid_route(error):
+def invalid_route(err):
     """
     Catch-all route for any unrecognized URLs
 
@@ -174,5 +153,5 @@ def invalid_route(error):
         Template: Custom 404 page
     """
 
-    app.logger.error(error)
+    error(err)
     return render_template('404.html')
