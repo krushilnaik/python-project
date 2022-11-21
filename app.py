@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from models import db
 from models.summary import Summary
 from utils.constants import (ARCHIVE, ERROR, MONTHS, SUMMARY_SHEET, UPLOADS,
-                             VALID_SHEETS)
+                             VALID_SHEETS, VOC_SHEET)
 from utils.helpers import (error, file_to_archives, file_to_errors, goto, info,
                            validate_and_write)
 
@@ -117,29 +117,33 @@ def upload():
         file_to_errors(filename, error)
         return goto("index")
 
-    active_sheet = workbook[SUMMARY_SHEET]
-    data_columns = ["A", "B", "C", "D", "E", "F"]
-
     try:
+        active_sheet = workbook[SUMMARY_SHEET]
+        data_columns = ["A", "B", "C", "D", "E", "F"]
+
         # A well formed sheet has relavent data in rows 2 to 14 (for the 12 months)
         for num in range(2, 14):
             values = [active_sheet[f"{c}{num}"].value for c in data_columns]
 
             validate_and_write(values)
 
-        info(f"Searching database for info on {year}-{month}")
+        info(f"Searching summary table for info on {year}-{month}")
 
         # fetch the first entry found that was recorded on the month in question
         # (between the 1st and 31st of that month)
-        test = Summary.query.filter(Summary.time_period.between(
+        summary = Summary.query.filter(Summary.time_period.between(
             f'{year}-{month}-01', f'{year}-{month}-31')
         ).first()
+
+        active_sheet = workbook[VOC_SHEET]
+
+        #
 
         # finished processing, move file to ARCHIVE
         # and return a view with the data
         file_to_archives(filename)
 
-        return render_template("results.html", value=test.as_dict())
+        return render_template("results.html", value=summary.as_dict())
     except ValidationError as error:
         file_to_errors(filename, error)
 
