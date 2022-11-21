@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 import utils.helpers as helpers
 from models import db
 from models.summary import Summary
-from utils.constants import SUMMARY_SHEET, UPLOADS, VALID_SHEETS, VOC_SHEET
+from utils.constants import SUMMARY_SHEET, UPLOADS, VOC_SHEET
 from utils.logger import error, info
 
 # load environment variables
