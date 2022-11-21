@@ -91,8 +91,8 @@ def upload():
         (month, year) = helpers.get_month_year(filename)
     except (KeyError, ValueError) as err:
         helpers.file_to_errors(filename, err)
-        flash("Error: malformed speadsheet")
-        return redirect(url_for("index"))
+        flash("Error: malformed speadsheet file name")
+        return redirect(url_for("index")), 400
 
     # parse file with openpyxl
     workbook = load_workbook(UPLOADS / filename, data_only=True)
@@ -105,7 +105,7 @@ def upload():
             filename, f"{filename} doesn't have the expected sheets"
         )
 
-        return redirect(url_for("index"))
+        return redirect(url_for("index")), 400
 
     try:
         active_sheet = workbook[SUMMARY_SHEET]
@@ -117,21 +117,39 @@ def upload():
 
             helpers.validate_and_write(values)
 
-        info(f"Searching summary table for info on {year}-{month}")
-
-        summary = Summary.get_entry(year, month)
-
         active_sheet = workbook[VOC_SHEET]
 
         # finished processing, move file to ARCHIVE
         # and return a view with the data
         helpers.file_to_archives(filename)
 
-        return render_template("results.html", value=summary.as_dict())
+        return redirect(url_for("results", year=year, month=month)), 200
+
     except ValidationError as err:
         flash(f"Some of the data in {filename} is invalid!")
         helpers.file_to_errors(filename, err)
-        return redirect(url_for("index"))
+        return redirect(url_for("index")), 400
+
+
+@app.get("/results/<int:year>/<int:month>")
+def results(year, month):
+    """
+    Display report for a given month and year
+
+    Args:
+        year (int): year
+        month (int): month
+    """
+    info(f"Searching summary table for info on {year}-{month}")
+
+    summary = Summary.get_entry(year, month)
+
+    if not summary:
+        flash(f"No data for {year}-{month:02} found in spreadsheet")
+        error(f"No data for {year}-{month:02} found in spreadsheet")
+        return redirect(url_for("index")), 302
+
+    return render_template("results.html", value=summary.as_dict())
 
 
 @app.errorhandler(404)

@@ -2,6 +2,7 @@
 Integration tests for Flask app
 """
 from app import app
+from utils.helpers import clear_processed
 
 
 def test_healthcheck():
@@ -39,9 +40,7 @@ def test_upload_route():
     THEN the file should be searched in 'processed.lst'
     """
 
-    # clear processed.lst contents
-    with open('processed.lst', 'w', encoding="utf-8"):
-        pass
+    clear_processed()
 
     with app.test_client() as test_client:
         filename = 'examples/expedia_report_monthly_january_2018.xlsx'
@@ -81,9 +80,7 @@ def test_upload_invalid_files():
     THEN the file should be flagged as such and the function should exit
     """
 
-    # clear processed.lst contents
-    with open('processed.lst', 'w', encoding="utf-8"):
-        pass
+    clear_processed()
 
     with app.test_client() as test_client:
         filename = 'examples/expedia_report_monthly_q1.xlsx'
@@ -95,14 +92,13 @@ def test_upload_invalid_files():
 
             response = test_client.post('/upload', data=data)
 
-            # it should send ok the first time
-            assert response.status_code == 302
+            assert response.status_code == 400
 
             with test_client.session_transaction() as session:
                 flash = session['_flashes'][0]
 
                 assert flash[0] == 'message'
-                assert flash[1] == "Error: malformed speadsheet"
+                assert flash[1] == "Error: malformed speadsheet file name"
 
         filename = 'examples/expedia_report_monthly_march_march.xlsx'
 
@@ -122,7 +118,7 @@ def test_upload_invalid_files():
 
             response = test_client.post('/upload', data=data)
 
-            assert response.status_code == 302
+            assert response.status_code == 400
 
             with test_client.session_transaction() as session:
                 flash = session['_flashes'][-1]
@@ -140,7 +136,7 @@ def test_upload_invalid_files():
 
             response = test_client.post('/upload', data=data)
 
-            assert response.status_code == 302
+            assert response.status_code == 400
 
             with test_client.session_transaction() as session:
                 flash = session['_flashes'][-1]
@@ -168,6 +164,41 @@ def test_no_file_uploaded():
 
             assert flash[0] == 'message'
             assert flash[1] == 'No file uploaded'
+
+
+def test_results_page():
+    """
+    GIVEN a Flask application configured for testing
+    WHEN an Excel file is uploaded and the results page is hit
+    THEN accurate data should be displayed on the screen
+    """
+
+    clear_processed()
+
+    with app.test_client() as test_client:
+        filename = 'examples/expedia_report_monthly_january_2018.xlsx'
+
+        with open(filename, 'rb') as file:
+            data = {
+                "file": (file, filename)
+            }
+
+            response = test_client.post('/upload', data=data)
+
+            assert response.status_code == 200
+
+        response = test_client.get("/results/2018/1")
+
+        assert response.status_code == 200
+        assert b'Analysis of January 2018' in response.data
+
+        response = test_client.get("/results/2025/1")
+
+        with test_client.session_transaction() as session:
+            flash = session['_flashes'][-1]
+
+            assert flash[0] == "message"
+            assert flash[1] == "No data for 2025-01 found in spreadsheet"
 
 
 def test_404_page():

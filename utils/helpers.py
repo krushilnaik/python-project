@@ -22,6 +22,13 @@ def init_storage():
 
     info("Created storage directories")
 
+def clear_processed():
+    """
+    clear processed.lst contents
+    """
+
+    with open('processed.lst', 'w', encoding="utf-8"):
+        pass
 
 def has_required_sheets(sheetnames):
     """
