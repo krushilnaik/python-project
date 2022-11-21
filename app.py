@@ -4,17 +4,17 @@ Smoothstack Evaluation Week Final Project
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, flash, render_template, request
+from flask import Flask, flash, redirect, render_template, request, url_for
 from openpyxl import load_workbook
 from pydantic import ValidationError
 from werkzeug.utils import secure_filename
 
+import utils.helpers as helpers
 from models import db
 from models.summary import Summary
-from utils.constants import (ARCHIVE, ERROR, MONTHS, SUMMARY_SHEET, UPLOADS,
+from utils.constants import (ARCHIVE, ERROR, SUMMARY_SHEET, UPLOADS,
                              VALID_SHEETS, VOC_SHEET)
-from utils.helpers import (error, file_to_archives, file_to_errors, goto, info,
-                           validate_and_write)
+from utils.logger import error, info
 
 # load environment variables
 load_dotenv()
@@ -75,38 +75,24 @@ def upload():
 
     if not file.filename:
         flash("No file uploaded")
-        return goto('index')
+        return redirect(url_for('index'))
 
     # cleanse file path of crazy characters
     filename = secure_filename(file.filename)
 
     # check if file has already been parsed
-    with open('processed.lst', 'a+', encoding="utf-8") as processed:
-        # jump to the start of the file to begin reading
-        processed.seek(0)
-
-        if filename in processed.read():
-            flash(f"{filename} has already been processed")
-            info(f"{filename} has already been processed")
-            return goto('index')
-
-        info(f"Starting to process {filename}")
-        processed.write(filename + "\n")
+    if helpers.has_been_parsed(filename):
+        return redirect(url_for('index'))
 
     file.save(UPLOADS / filename)
 
     # try to infer month and year from file. If not possible, move to ERROR
     try:
-        parts = filename.split("_")[-2:]
-        month = MONTHS[parts[0].lower()[:3]]
-        year = parts[1][:4]
-
-        if not year.isnumeric():
-            raise ValueError("Year could not be inferred from file name")
+        (month, year) = helpers.get_month_year(filename)
     except (KeyError, ValueError) as err:
-        file_to_errors(filename, err)
+        helpers.file_to_errors(filename, err)
         flash("Error: malformed speadsheet")
-        return goto("index")
+        return redirect(url_for("index"))
 
     # parse file with openpyxl
     workbook = load_workbook(UPLOADS / filename, data_only=True)
@@ -114,10 +100,10 @@ def upload():
     # check if all three tabs are present (if not, move to ERROR)
     if len(workbook.sheetnames) != 3 or set(workbook.sheetnames) != VALID_SHEETS:
         flash("Error: malformed speadsheet")
-        file_to_errors(
+        helpers.file_to_errors(
             filename, f"{filename} doesn't have the expected sheets"
         )
-        return goto("index")
+        return redirect(url_for("index"))
 
     try:
         active_sheet = workbook[SUMMARY_SHEET]
@@ -127,27 +113,23 @@ def upload():
         for num in range(2, 14):
             values = [active_sheet[f"{c}{num}"].value for c in data_columns]
 
-            validate_and_write(values)
+            helpers.validate_and_write(values)
 
         info(f"Searching summary table for info on {year}-{month}")
 
-        # fetch the first entry found that was recorded on the month in question
-        # (between the 1st and 31st of that month)
-        summary = Summary.query.filter(Summary.time_period.between(
-            f'{year}-{month}-01', f'{year}-{month}-31')
-        ).first()
+        summary = Summary.get_entry(year, month)
 
         active_sheet = workbook[VOC_SHEET]
 
         # finished processing, move file to ARCHIVE
         # and return a view with the data
-        file_to_archives(filename)
+        helpers.file_to_archives(filename)
 
         return render_template("results.html", value=summary.as_dict())
     except ValidationError as err:
         flash(f"Some of the data in {filename} is invalid!")
-        file_to_errors(filename, err)
-        return goto("index")
+        helpers.file_to_errors(filename, err)
+        return redirect(url_for("index"))
 
 
 @app.errorhandler(404)

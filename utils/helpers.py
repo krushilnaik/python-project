@@ -4,25 +4,58 @@ Utility functions used throughout the project
 
 import os
 
-from flask import redirect, url_for
+from flask import flash
 
 from models import db
 from models.summary import Summary, SummaryValidator
-from utils.constants import ARCHIVE, ERROR, UPLOADS
+from utils.constants import ARCHIVE, ERROR, MONTHS, UPLOADS
 from utils.logger import error, info
 
 
-def goto(view):
+def get_month_year(filename):
     """
-    Redirect to a page by its view function
+    Attempt to extract month and year from filename
 
     Args:
-        view (str): name of the view function that handles the route
+        filename (str): filename
+
+    Raises:
+        ValueError: if extraction failed
 
     Returns:
-        Response: Flask response object
+        tuple: (month, year) <- both numbers
     """
-    return redirect(url_for(view))
+    parts = filename.split("_")[-2:]
+    month = MONTHS[parts[0].lower()[:3]]
+    year = parts[1][:4]
+
+    if not year.isnumeric():
+        raise ValueError("Year could not be inferred from file name")
+
+    return (month, year)
+
+
+def has_been_parsed(filename):
+    """
+    Check if a file has already been parsed
+    NOTE: this will mark it as parsed if it hasn't
+
+    Args:
+        filename (str): filename
+    """
+    with open('processed.lst', 'a+', encoding="utf-8") as processed:
+        # jump to the start of the file to begin reading
+        processed.seek(0)
+
+        if filename in processed.read():
+            flash(f"{filename} has already been processed")
+            info(f"{filename} has already been processed")
+            return True
+
+        info(f"Starting to process {filename}")
+        processed.write(filename + "\n")
+
+        return False
 
 
 def validate_and_write(values: list):

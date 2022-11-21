@@ -24,6 +24,22 @@ class Summary(db.Model):
     dsat = db.Column(db.Float)
     csat = db.Column(db.Float)
 
+    @classmethod
+    def get_entry(cls, year, month):
+        """
+        Search database for entry by year and month
+
+        Args:
+            year (int): year
+            month (int): month
+
+        Returns:
+            Summary: entry
+        """
+        return cls.query.filter(Summary.time_period.between(
+            f'{year}-{month}-01', f'{year}-{month}-31')
+        ).first()
+
     def as_dict(self):
         """
         Return the Summary object as a dictionary of properly formatted strings
