@@ -31,6 +31,6 @@ VALID_SHEETS = set([
 
 PROCESSED = 'processed.lst'
 
-UPLOADS = Path('./uploads')
-ARCHIVE = Path('./archive')
-ERROR = Path('./error')
+UPLOADS = Path('./documents/uploads')
+ARCHIVE = Path('./documents/archive')
+ERROR = Path('./documents/error')

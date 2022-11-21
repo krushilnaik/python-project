@@ -99,7 +99,7 @@ footer {
 
 .flashes li {
   width: max-content;
-  animation: flash 350ms 5 alternate;
+  animation: flash 350ms 3 alternate;
 }
 
 @keyframes flash {
