@@ -6,8 +6,6 @@ import os
 
 from flask import flash
 
-from models import db
-from models.summary import Summary, SummaryValidator
 from utils.constants import (ARCHIVE, ERROR, MONTHS, PROCESSED, UPLOADS,
                              VALID_SHEETS)
 from utils.logger import error, info
