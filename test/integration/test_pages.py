@@ -2,7 +2,8 @@
 Integration tests for Flask app
 """
 from app import app
-from utils.helpers import clear_processed
+from utils.constants import PROCESSED
+from utils.helpers import clear_file
 
 
 def test_healthcheck():
@@ -40,7 +41,7 @@ def test_upload_route():
     THEN the file should be searched in 'processed.lst'
     """
 
-    clear_processed()
+    clear_file(PROCESSED)
 
     with app.test_client() as test_client:
         filename = 'examples/expedia_report_monthly_january_2018.xlsx'
@@ -53,7 +54,7 @@ def test_upload_route():
             response = test_client.post('/upload', data=data)
 
             # it should send ok the first time
-            assert response.status_code == 200
+            assert response.status_code == 302
 
         with open(filename, 'rb') as file:
             data = {
@@ -80,7 +81,7 @@ def test_upload_invalid_files():
     THEN the file should be flagged as such and the function should exit
     """
 
-    clear_processed()
+    clear_file(PROCESSED)
 
     with app.test_client() as test_client:
         filename = 'examples/expedia_report_monthly_q1.xlsx'
@@ -173,7 +174,7 @@ def test_results_page():
     THEN accurate data should be displayed on the screen
     """
 
-    clear_processed()
+    clear_file(PROCESSED)
 
     with app.test_client() as test_client:
         filename = 'examples/expedia_report_monthly_january_2018.xlsx'
@@ -185,7 +186,7 @@ def test_results_page():
 
             response = test_client.post('/upload', data=data)
 
-            assert response.status_code == 200
+            assert response.status_code == 302
 
         response = test_client.get("/results/2018/1")
 

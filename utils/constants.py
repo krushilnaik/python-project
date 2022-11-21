@@ -29,6 +29,8 @@ VALID_SHEETS = set([
     VERBATIM_SHEET
 ])
 
+PROCESSED = 'processed.lst'
+
 UPLOADS = Path('./uploads')
 ARCHIVE = Path('./archive')
 ERROR = Path('./error')

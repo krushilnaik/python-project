@@ -1,8 +1,8 @@
 """
 Smoothstack Evaluation Week Final Project
 """
+
 import os
-from logging import error, info
 
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, url_for
@@ -14,6 +14,7 @@ from models import db
 from models.summary import Summary
 from utils import helpers
 from utils.constants import SUMMARY_SHEET, UPLOADS, VOC_SHEET
+from utils.logger import error, info
 
 # load environment variables
 load_dotenv()
@@ -123,7 +124,7 @@ def upload():
         # and return a view with the data
         helpers.file_to_archives(filename)
 
-        return redirect(url_for("results", year=year, month=month)), 200
+        return redirect(url_for("results", year=year, month=month))
 
     except ValidationError as err:
         flash(f"Some of the data in {filename} is invalid!")

@@ -3,13 +3,14 @@ Utility functions used throughout the project
 """
 
 import os
-from logging import error, info
 
 from flask import flash
 
 from models import db
 from models.summary import Summary, SummaryValidator
-from utils.constants import ARCHIVE, ERROR, MONTHS, UPLOADS, VALID_SHEETS
+from utils.constants import (ARCHIVE, ERROR, MONTHS, PROCESSED, UPLOADS,
+                             VALID_SHEETS)
+from utils.logger import error, info
 
 
 def init_storage():
@@ -22,13 +23,18 @@ def init_storage():
 
     info("Created storage directories")
 
-def clear_processed():
+
+def clear_file(filename):
     """
-    clear processed.lst contents
+    Clear a file's contents
+
+    Args:
+        filename (str): _description_
     """
 
-    with open('processed.lst', 'w', encoding="utf-8"):
+    with open(filename, 'w', encoding="utf-8"):
         pass
+
 
 def has_required_sheets(sheetnames):
     """
@@ -77,7 +83,7 @@ def has_been_parsed(filename):
         filename (str): filename
     """
 
-    with open('processed.lst', 'a+', encoding="utf-8") as processed:
+    with open(PROCESSED, 'a+', encoding="utf-8") as processed:
         # jump to the start of the file to begin reading
         processed.seek(0)
 
