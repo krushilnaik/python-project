@@ -31,12 +31,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{USER}@{HOST}/{DATABAS
 app.secret_key = "55e36cb88d9251f1bd812ec5242e5ead"
 
 
-# initialize database connection
+# connect to mysql
 db.init_app(app)
-
-# create tables
-with app.app_context():
-    db.create_all()
 
 # create storage directories if they don't exist
 helpers.init_storage()
