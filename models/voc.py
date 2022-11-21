@@ -52,12 +52,3 @@ class VOC(db.Model):
             "passives": self.passives,
             "detractors": self.detractors
         }
-
-
-# class VOCValidator(BaseModel):
-#     """
-#     Helper class to validate data before being entered into the database
-
-#     Raises:
-#         ValidationError: in the event one of the fields failed validation
-#     """
