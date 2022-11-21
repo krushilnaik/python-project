@@ -3,13 +3,13 @@ Utility functions used throughout the project
 """
 
 import os
+from logging import error, info
 
 from flask import flash
 
 from models import db
 from models.summary import Summary, SummaryValidator
 from utils.constants import ARCHIVE, ERROR, MONTHS, UPLOADS, VALID_SHEETS
-from utils.logger import error, info
 
 
 def init_storage():

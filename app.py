@@ -2,6 +2,7 @@
 Smoothstack Evaluation Week Final Project
 """
 import os
+from logging import error, info
 
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, url_for
@@ -9,11 +10,10 @@ from openpyxl import load_workbook
 from pydantic import ValidationError
 from werkzeug.utils import secure_filename
 
-import utils.helpers as helpers
 from models import db
 from models.summary import Summary
+from utils import helpers
 from utils.constants import SUMMARY_SHEET, UPLOADS, VOC_SHEET
-from utils.logger import error, info
 
 # load environment variables
 load_dotenv()
