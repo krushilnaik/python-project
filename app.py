@@ -5,7 +5,6 @@ Smoothstack Evaluation Week Final Project
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, url_for
@@ -14,7 +13,10 @@ from pydantic import ValidationError
 from werkzeug.utils import secure_filename
 
 from models import db
-from models.summary import Summary, SummaryValidator
+from models.summary import Summary
+from utils.constants import (ARCHIVE, ERROR, MONTHS, SUMMARY_SHEET, UPLOADS,
+                             VALID_SHEETS)
+from utils.helpers import file_to_archives, file_to_errors, validate_and_write
 
 # load environment variables
 load_dotenv()
@@ -45,35 +47,6 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
-
-MONTHS = {
-    "jan": 1,
-    "feb": 2,
-    "mar": 3,
-    "apr": 4,
-    "may": 5,
-    "jun": 6,
-    "jul": 7,
-    "aug": 8,
-    "sep": 9,
-    "oct": 10,
-    "nov": 11,
-    "dec": 12,
-}
-
-SUMMARY_SHEET = "Summary Rolling MoM"
-VOC_SHEET = "VOC Rolling MoM"
-VERBATIM_SHEET = "Monthly Verbatim Statements"
-
-VALID_SHEETS = set([
-    SUMMARY_SHEET,
-    VOC_SHEET,
-    VERBATIM_SHEET
-])
-
-UPLOADS = Path('./uploads')
-ARCHIVE = Path('./archive')
-ERROR = Path('./error')
 
 # create the above directories if they don't exist
 for _dir in [UPLOADS, ARCHIVE, ERROR]:
@@ -137,15 +110,29 @@ def upload():
 
     file.save(UPLOADS / filename)
 
+    # try to infer month and year from file. If not possible, move to ERROR
+    try:
+        parts = filename.split("_")[-2:]
+        month = MONTHS[parts[0].lower()[:3]]
+        year = parts[1][:4]
+
+        if not year.isnumeric():
+            raise ValueError("Year could not be inferred from file name")
+    except (KeyError, ValueError) as error:
+        file_to_errors(filename, error)
+        app.logger.error(error)
+
+        flash("Error: malformed speadsheet")
+        return redirect(url_for("index"))
+
     # parse file with openpyxl
     workbook = load_workbook(UPLOADS / filename, data_only=True)
 
     # check if all three tabs are present (if not, move to ERROR)
     if len(workbook.sheetnames) != 3 or set(workbook.sheetnames) != VALID_SHEETS:
         flash("Error: malformed speadsheet")
-        app.logger.error(
-            f"One or more required spreadsheets not found in {filename}")
-        os.replace(UPLOADS / filename, ERROR / filename)
+        file_to_errors(filename)
+        app.logger.error(f"Some required sheets are missing!")
         return redirect(url_for("index"))
 
     active_sheet = workbook[SUMMARY_SHEET]
@@ -156,36 +143,7 @@ def upload():
         for num in range(2, 14):
             values = [active_sheet[f"{c}{num}"].value for c in data_columns]
 
-            # run each row through the validator
-            SummaryValidator(
-                time_period=values[0],
-                calls_offered=values[1],
-                abandoned_after_30=values[2],
-                fcr=values[3],
-                dsat=values[4],
-                csat=values[5]
-            )
-
-            # load validated data into ORM
-            row = Summary(
-                time_period=values[0],
-                calls_offered=values[1],
-                abandoned_after_30=values[2],
-                fcr=values[3],
-                dsat=values[4],
-                csat=values[5],
-            )
-
-            # write row to mysql
-            db.session.add(row)
-            db.session.commit()
-
-            app.logger.info(f"{str(row)} successfully added to database")
-
-        # try to infer month and year from file. If not possible, move to ERROR
-        parts = filename.split("_")[-2:]
-        month = MONTHS[parts[0].lower()[:3]]
-        year = parts[1][:4]
+            validate_and_write(values)
 
         app.logger.info(f"Searching database for info on {year}-{month}")
 
@@ -197,13 +155,13 @@ def upload():
 
         # finished processing, move file to ARCHIVE
         # and return a view with the data
-        os.replace(UPLOADS / filename, ARCHIVE / filename)
+        file_to_archives(filename)
         app.logger.info(f"{filename} moved from UPLOADS to ARCHIVE")
 
         return render_template("results.html", value=test.as_dict())
     except ValidationError as error:
         app.logger.error(error)
-        os.replace(UPLOADS / filename, ERROR / filename)
+        file_to_errors(filename)
         app.logger.info(f"{filename} moved from UPLOADS to ERROR")
 
 

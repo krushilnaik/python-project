@@ -11,6 +11,7 @@ services:
     volumes:
       - .:/usr/src/app
     environment:
+      PYTHONPATH: /usr/src/app
       FLASK_APP: app
       FLASK_DEBUG: 1
       MYSQL_DATABASE: smoothstack
