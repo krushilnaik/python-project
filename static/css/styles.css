@@ -4,13 +4,17 @@
   box-sizing: border-box;
 }
 
+li {
+  list-style-type: none;
+}
+
 body {
   max-width: 100vw;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: #161b25;
-  color: honeydew;
+  color: azure;
   font-family: sans-serif;
 }
 
@@ -39,7 +43,7 @@ form {
   border: solid 3px tomato;
   padding: 1.3rem 2rem;
   width: 100%;
-  gap: .5rem;
+  gap: 0.5rem;
   border-radius: 10px;
   transition: all 300ms;
   cursor: pointer;

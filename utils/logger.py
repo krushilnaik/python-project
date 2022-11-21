@@ -4,11 +4,12 @@ Custom logging module to use throughout the application
 import logging
 
 logger = logging.getLogger('file_logger')
+logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s')
 
 file_handler = logging.FileHandler('flask_app.log')
 file_handler.setFormatter(formatter)
-
+file_handler.setLevel(logging.DEBUG)
 logger.addHandler(file_handler)
 
 

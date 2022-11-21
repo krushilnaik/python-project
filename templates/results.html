@@ -2,30 +2,47 @@
 
 {% block content %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
-  <div class="summary">
-    <h1>Analysis of {{value["Time Period"]}}</h1>
-    <ul>
-      <li>
-        <span class="description">Calls Offered</span>
-        <span class="value">{{value["Calls Offered"]}}</span>
-      </li>
-      <li>
-        <span class="description">Abandon after 30 seconds</span>
-        <span class="value">{{value["Abandon after 30s"]}}</span>
-      </li>
-      <li>
-        <span class="description">FCR</span>
-        <span class="value">{{value["FCR"]}}</span>
-      </li>
-      <li>
-        <span class="description">DSAT</span>
-        <span class="value">{{value["DSAT"]}}</span>
-      </li>
-      <li>
-        <span class="description">CSAT</span>
-        <span class="value">{{value["CSAT"]}}</span>
-      </li>
-    </ul>
+  <section>
+    <h1>Analysis of <span class="date">{{value["Time Period"]}}</span></h1>
+    <div class="wrapper">
+      <ul class="summary">
+        <li>
+          <span class="description">Calls Offered</span>
+          <span class="value">{{value["Calls Offered"]}}</span>
+        </li>
+        <li>
+          <span class="description">Abandon after 30 seconds</span>
+          <span class="value">{{value["Abandon after 30s"]}}</span>
+        </li>
+        <li>
+          <span class="description">FCR</span>
+          <span class="value">{{value["FCR"]}}</span>
+        </li>
+        <li>
+          <span class="description">DSAT</span>
+          <span class="value">{{value["DSAT"]}}</span>
+        </li>
+        <li>
+          <span class="description">CSAT</span>
+          <span class="value">{{value["CSAT"]}}</span>
+        </li>
+      </ul>
+      <div class="divider" aria-hidden></div>
+      <ul class="voc">
+        <li class='{% if voc["promoters"] > 200 %}good{% else %}bad{% endif %}'>
+          <span class="description">Promoters</span>
+          <span class="count">{{voc["promoters"]}}</span>
+        </li>
+        <li class='{% if voc["passives"] > 200 %}good{% else %}bad{% endif %}'>
+          <span class="description">Passives</span>
+          <span class="count">{{voc["passives"]}}</span>
+        </li>
+        <li class='{% if voc["detractors"] > 200 %}good{% else %}bad{% endif %}'>
+          <span class="description">Detractors</span>
+          <span class="count">{{voc["detractors"]}}</span>
+        </li>
+      </ul>
+    </div>
     <a class="button" href="/">Home</a>
-  </div>
+  </section>
 {% endblock %}

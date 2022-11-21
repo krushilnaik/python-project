@@ -9,6 +9,7 @@ from flask import Flask, flash, redirect, render_template, request, url_for
 from openpyxl import load_workbook
 from pydantic import ValidationError
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import NotFound
 
 from models import db
 from models.summary import Summary
@@ -93,7 +94,7 @@ def upload():
     except (KeyError, ValueError) as err:
         helpers.file_to_errors(filename, err)
         flash("Error: malformed speadsheet file name")
-        return redirect(url_for("index")), 400
+        return redirect(url_for("index"))
 
     # parse file with openpyxl
     workbook = load_workbook(UPLOADS / filename, data_only=True)
@@ -106,7 +107,7 @@ def upload():
             filename, f"{filename} doesn't have the expected sheets"
         )
 
-        return redirect(url_for("index")), 400
+        return redirect(url_for("index"))
 
     try:
         active_sheet = workbook[SUMMARY_SHEET]
@@ -129,7 +130,7 @@ def upload():
     except ValidationError as err:
         flash(f"Some of the data in {filename} is invalid!")
         helpers.file_to_errors(filename, err)
-        return redirect(url_for("index")), 400
+        return redirect(url_for("index"))
 
 
 @app.get("/results/<int:year>/<int:month>")
@@ -141,19 +142,25 @@ def results(year, month):
         year (int): year
         month (int): month
     """
-    info(f"Searching summary table for info on {year}-{month}")
-
+    info(f"Searching summary table for info on {year}-{month:02}")
     summary = Summary.get_entry(year, month)
+    info("Summary info found!")
 
     if not summary:
         flash(f"No data for {year}-{month:02} found in spreadsheet")
         error(f"No data for {year}-{month:02} found in spreadsheet")
         return redirect(url_for("index")), 302
 
-    return render_template("results.html", value=summary.as_dict())
+    voc = {
+        "promoters": 520,
+        "passives": 246,
+        "detractors": 23
+    }
+
+    return render_template("results.html", value=summary.as_dict(), voc=voc)
 
 
-@app.errorhandler(404)
+@app.errorhandler(NotFound)
 def invalid_route(err):
     """
     Catch-all route for any unrecognized URLs

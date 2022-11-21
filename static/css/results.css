@@ -13,9 +13,31 @@ li {
   justify-content: space-between;
   align-items: center;
   gap: 2rem;
-  list-style-type: none;
   width: 100%;
   border-bottom: dotted 2px rgba(240, 128, 128, 0.588);
+}
+
+.voc li {
+  border: none;
+  border-radius: 0 999px 999px 0;
+  padding-right: 15px;
+}
+
+.voc .description {
+  background-color: rgba(0, 0, 0, 0.16);
+}
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.divider {
+  height: 100%;
+  background: lightcoral;
+  opacity: 0.2;
+  width: 2px;
 }
 
 .description {
@@ -32,7 +54,7 @@ li {
   );
 }
 
-.summary {
+section {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -47,4 +69,12 @@ li {
   text-decoration: none;
   color: rgb(255, 144, 125);
   margin-top: 3rem;
+}
+
+.good {
+  background-color: mediumseagreen;
+}
+
+.bad {
+  background-color: tomato;
 }
