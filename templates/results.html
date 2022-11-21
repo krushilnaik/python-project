@@ -28,20 +28,23 @@
         </li>
       </ul>
       <div class="divider" aria-hidden></div>
-      <ul class="voc">
-        <li class='{% if voc["promoters"] > 200 %}good{% else %}bad{% endif %}'>
-          <span class="description">Promoters</span>
-          <span class="count">{{voc["promoters"]}}</span>
-        </li>
-        <li class='{% if voc["passives"] > 100 %}good{% else %}bad{% endif %}'>
-          <span class="description">Passives</span>
-          <span class="count">{{voc["passives"]}}</span>
-        </li>
-        <li class='{% if voc["detractors"] > 100 %}good{% else %}bad{% endif %}'>
-          <span class="description">Detractors</span>
-          <span class="count">{{voc["detractors"]}}</span>
-        </li>
-      </ul>
+      <div class="promoter_scores">
+        <h2>Net Promoter Scores</h2>
+        <ul class="voc">
+          <li class='{% if voc["promoters"] > 200 %}good{% else %}bad{% endif %}'>
+            <span class="description">Promoters</span>
+            <span class="count">{{voc["promoters"]}}</span>
+          </li>
+          <li class='{% if voc["passives"] > 100 %}good{% else %}bad{% endif %}'>
+            <span class="description">Passives</span>
+            <span class="count">{{voc["passives"]}}</span>
+          </li>
+          <li class='{% if voc["detractors"] > 100 %}good{% else %}bad{% endif %}'>
+            <span class="description">Detractors</span>
+            <span class="count">{{voc["detractors"]}}</span>
+          </li>
+        </ul>
+      </div>
     </div>
     <a class="button" href="/">Home</a>
   </section>

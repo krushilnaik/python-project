@@ -1,3 +1,7 @@
+h1 {
+  font-size: 2.5rem;
+}
+
 ul {
   display: flex;
   flex-direction: column;
@@ -15,6 +19,17 @@ li {
   gap: 2rem;
   width: 100%;
   border-bottom: dotted 2px rgba(240, 128, 128, 0.588);
+}
+
+.promoter_scores {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.voc {
+  width: max-content;
 }
 
 .voc li {
