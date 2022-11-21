@@ -12,6 +12,7 @@ def info(message):
     Args:
         message (str): message
     """
+
     logging.info(message)
 
 
@@ -22,4 +23,5 @@ def error(message):
     Args:
         message (str): message
     """
+
     logging.error(message)

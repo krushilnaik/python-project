@@ -8,8 +8,33 @@ from flask import flash
 
 from models import db
 from models.summary import Summary, SummaryValidator
-from utils.constants import ARCHIVE, ERROR, MONTHS, UPLOADS
+from utils.constants import ARCHIVE, ERROR, MONTHS, UPLOADS, VALID_SHEETS
 from utils.logger import error, info
+
+
+def init_storage():
+    """
+    Create storage directories if they don't exist
+    """
+
+    for _dir in [UPLOADS, ARCHIVE, ERROR]:
+        _dir.mkdir(parents=True, exist_ok=True)
+
+    info("Created storage directories")
+
+
+def has_required_sheets(sheetnames):
+    """
+    Make sure all required sheets are present
+
+    Args:
+        sheetnames (list): list of sheetnames pulled from openpyxl
+    """
+    for sheet in VALID_SHEETS:
+        if sheet not in sheetnames:
+            return False
+
+    return True
 
 
 def get_month_year(filename):
@@ -25,6 +50,7 @@ def get_month_year(filename):
     Returns:
         tuple: (month, year) <- both numbers
     """
+
     parts = filename.split("_")[-2:]
     month = MONTHS[parts[0].lower()[:3]]
     year = parts[1][:4]
@@ -43,6 +69,7 @@ def has_been_parsed(filename):
     Args:
         filename (str): filename
     """
+
     with open('processed.lst', 'a+', encoding="utf-8") as processed:
         # jump to the start of the file to begin reading
         processed.seek(0)
@@ -112,6 +139,7 @@ def file_to_errors(filename, err):
     Args:
         filename (str): file to move
     """
+
     error(err)
     os.replace(UPLOADS / filename, ERROR / filename)
     info(f"Moved {filename} from 'uploads' to 'error'")

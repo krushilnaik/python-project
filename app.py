@@ -12,8 +12,7 @@ from werkzeug.utils import secure_filename
 import utils.helpers as helpers
 from models import db
 from models.summary import Summary
-from utils.constants import (ARCHIVE, ERROR, SUMMARY_SHEET, UPLOADS,
-                             VALID_SHEETS, VOC_SHEET)
+from utils.constants import SUMMARY_SHEET, UPLOADS, VALID_SHEETS, VOC_SHEET
 from utils.logger import error, info
 
 # load environment variables
@@ -28,15 +27,16 @@ DATABASE = os.getenv("MYSQL_DATABASE")
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{USER}@{HOST}/{DATABASE}"
 app.secret_key = "55e36cb88d9251f1bd812ec5242e5ead"
 
+
+# initialize database connection
 db.init_app(app)
 
+# create tables
 with app.app_context():
     db.create_all()
 
-# create the above directories if they don't exist
-for _dir in [UPLOADS, ARCHIVE, ERROR]:
-    _dir.mkdir(parents=True, exist_ok=True)
-info("Created storage directories")
+# create storage directories if they don't exist
+helpers.init_storage()
 
 
 @app.get('/health')
@@ -98,11 +98,13 @@ def upload():
     workbook = load_workbook(UPLOADS / filename, data_only=True)
 
     # check if all three tabs are present (if not, move to ERROR)
-    if len(workbook.sheetnames) != 3 or set(workbook.sheetnames) != VALID_SHEETS:
+    if not helpers.has_required_sheets(workbook.sheetnames):
         flash("Error: malformed speadsheet")
+
         helpers.file_to_errors(
             filename, f"{filename} doesn't have the expected sheets"
         )
+
         return redirect(url_for("index"))
 
     try:
