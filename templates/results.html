@@ -3,28 +3,28 @@
 {% block content %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
   <section>
-    <h1>Analysis of <span class="date">{{value["Time Period"]}}</span></h1>
+    <h1>Analysis of {{summary["Time Period"]}}</h1>
     <div class="wrapper">
       <ul class="summary">
         <li>
           <span class="description">Calls Offered</span>
-          <span class="value">{{value["Calls Offered"]}}</span>
+          <span class="value">{{summary["Calls Offered"]}}</span>
         </li>
         <li>
           <span class="description">Abandon after 30 seconds</span>
-          <span class="value">{{value["Abandon after 30s"]}}</span>
+          <span class="value">{{summary["Abandon after 30s"]}}</span>
         </li>
         <li>
           <span class="description">FCR</span>
-          <span class="value">{{value["FCR"]}}</span>
+          <span class="value">{{summary["FCR"]}}</span>
         </li>
         <li>
           <span class="description">DSAT</span>
-          <span class="value">{{value["DSAT"]}}</span>
+          <span class="value">{{summary["DSAT"]}}</span>
         </li>
         <li>
           <span class="description">CSAT</span>
-          <span class="value">{{value["CSAT"]}}</span>
+          <span class="value">{{summary["CSAT"]}}</span>
         </li>
       </ul>
       <div class="divider" aria-hidden></div>
@@ -33,11 +33,11 @@
           <span class="description">Promoters</span>
           <span class="count">{{voc["promoters"]}}</span>
         </li>
-        <li class='{% if voc["passives"] > 200 %}good{% else %}bad{% endif %}'>
+        <li class='{% if voc["passives"] > 100 %}good{% else %}bad{% endif %}'>
           <span class="description">Passives</span>
           <span class="count">{{voc["passives"]}}</span>
         </li>
-        <li class='{% if voc["detractors"] > 200 %}good{% else %}bad{% endif %}'>
+        <li class='{% if voc["detractors"] > 100 %}good{% else %}bad{% endif %}'>
           <span class="description">Detractors</span>
           <span class="count">{{voc["detractors"]}}</span>
         </li>

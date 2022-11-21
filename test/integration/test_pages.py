@@ -110,6 +110,23 @@ def test_upload_invalid_files():
 
             response = test_client.post('/upload', data=data)
 
+        filename = 'examples/expedia_report_monthly_march_2018.xlsx'
+
+        with open(filename, 'rb') as file:
+            data = {
+                "file": (file, filename)
+            }
+
+            response = test_client.post('/upload', data=data)
+
+            assert response.status_code == 302
+
+            with test_client.session_transaction() as session:
+                flash = session['_flashes'][-1]
+
+                assert flash[0] == 'message'
+                assert flash[1] == "Invalid data!"
+
         filename = 'examples/unreal_percent_janubad_2018.xlsx'
 
         with open(filename, 'rb') as file:

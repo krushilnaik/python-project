@@ -40,6 +40,23 @@ class Summary(db.Model):
             f'{year}-{month}-01', f'{year}-{month}-31')
         ).first()
 
+    def save(self):
+        """
+        Validate and write this row to database
+        """
+
+        SummaryValidator(
+            time_period=self.time_period,
+            calls_offered=self.calls_offered,
+            abandoned_after_30=self.abandoned_after_30,
+            fcr=self.fcr,
+            dsat=self.dsat,
+            csat=self.csat
+        )
+
+        db.session.add(self)
+        db.session.commit()
+
     def as_dict(self):
         """
         Return the Summary object as a dictionary of properly formatted strings

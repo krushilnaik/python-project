@@ -3,16 +3,17 @@ Smoothstack Evaluation Week Final Project
 """
 
 import os
+from datetime import datetime
 
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, url_for
 from openpyxl import load_workbook
 from pydantic import ValidationError
 from werkzeug.utils import secure_filename
-from werkzeug.exceptions import NotFound
 
 from models import db
 from models.summary import Summary
+from models.voc import VOC
 from utils import helpers
 from utils.constants import SUMMARY_SHEET, UPLOADS, VOC_SHEET
 from utils.logger import error, info
@@ -111,15 +112,42 @@ def upload():
 
     try:
         active_sheet = workbook[SUMMARY_SHEET]
-        data_columns = ["A", "B", "C", "D", "E", "F"]
+        data_columns = helpers.char_range("A", "F")
 
-        # A well formed sheet has relavent data in rows 2 to 14 (for the 12 months)
+        # A well formed summary sheet has relavent data
+        # in rows 2 to 14 (for the 12 months)
         for num in range(2, 14):
             values = [active_sheet[f"{c}{num}"].value for c in data_columns]
 
-            helpers.validate_and_write(values)
+            row = Summary(
+                time_period=values[0],
+                calls_offered=values[1],
+                abandoned_after_30=values[2],
+                fcr=values[3],
+                dsat=values[4],
+                csat=values[5],
+            )
+
+            row.save()
 
         active_sheet = workbook[VOC_SHEET]
+
+        for col in helpers.char_range("B", "W"):
+            cell = active_sheet[f"{col}1"].value
+
+            if not isinstance(cell, datetime):
+                flash("Invalid data!")
+                helpers.file_to_errors(filename, "Invalid data!")
+                return redirect(url_for("index"))
+
+            voc = VOC(
+                time_period=cell,
+                promoters=active_sheet[f"{col}4"].value,
+                passives=active_sheet[f"{col}6"].value,
+                detractors=active_sheet[f"{col}8"].value
+            )
+
+            voc.save()
 
         # finished processing, move file to ARCHIVE
         # and return a view with the data
@@ -144,23 +172,28 @@ def results(year, month):
     """
     info(f"Searching summary table for info on {year}-{month:02}")
     summary = Summary.get_entry(year, month)
-    info("Summary info found!")
 
     if not summary:
         flash(f"No data for {year}-{month:02} found in spreadsheet")
         error(f"No data for {year}-{month:02} found in spreadsheet")
-        return redirect(url_for("index")), 302
+        return redirect(url_for("index"))
 
-    voc = {
-        "promoters": 520,
-        "passives": 246,
-        "detractors": 23
-    }
+    info("Summary info found!")
 
-    return render_template("results.html", value=summary.as_dict(), voc=voc)
+    info(f"Searching voc table for info on {year}-{month:02}")
+    voc = VOC.get_entry(year, month)
+
+    if not voc:
+        flash(f"No data for {year}-{month:02} found in spreadsheet")
+        error(f"No data for {year}-{month:02} found in spreadsheet")
+        return redirect(url_for("index"))
+
+    info("VOC info found!")
+
+    return render_template("results.html", summary=summary.as_dict(), voc=voc.as_dict())
 
 
-@app.errorhandler(NotFound)
+@app.errorhandler(404)
 def invalid_route(err):
     """
     Catch-all route for any unrecognized URLs
