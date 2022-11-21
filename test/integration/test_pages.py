@@ -1,8 +1,6 @@
 """
 Integration tests for Flask app
 """
-import pytest
-from pydantic import ValidationError
 from app import app
 
 
@@ -42,7 +40,8 @@ def test_upload_route():
     """
 
     # clear processed.lst contents
-    open('processed.lst', 'w', encoding="utf-8").close()
+    with open('processed.lst', 'w', encoding="utf-8"):
+        pass
 
     with app.test_client() as test_client:
         filename = 'examples/expedia_report_monthly_january_2018.xlsx'
@@ -83,7 +82,8 @@ def test_upload_invalid_files():
     """
 
     # clear processed.lst contents
-    open('processed.lst', 'w', encoding="utf-8").close()
+    with open('processed.lst', 'w', encoding="utf-8"):
+        pass
 
     with app.test_client() as test_client:
         filename = 'examples/expedia_report_monthly_q1.xlsx'
@@ -111,7 +111,6 @@ def test_upload_invalid_files():
                 "file": (file, filename)
             }
 
-            # with pytest.raises(ValueError) as e_info:
             response = test_client.post('/upload', data=data)
 
         filename = 'examples/unreal_percent_janubad_2018.xlsx'

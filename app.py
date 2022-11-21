@@ -89,9 +89,9 @@ def upload():
             flash(f"{filename} has already been processed")
             info(f"{filename} has already been processed")
             return goto('index')
-        else:
-            info(f"Starting to process {filename}")
-            processed.write(filename + "\n")
+
+        info(f"Starting to process {filename}")
+        processed.write(filename + "\n")
 
     file.save(UPLOADS / filename)
 
@@ -103,8 +103,8 @@ def upload():
 
         if not year.isnumeric():
             raise ValueError("Year could not be inferred from file name")
-    except (KeyError, ValueError) as error:
-        file_to_errors(filename, error)
+    except (KeyError, ValueError) as err:
+        file_to_errors(filename, err)
         flash("Error: malformed speadsheet")
         return goto("index")
 
@@ -114,7 +114,9 @@ def upload():
     # check if all three tabs are present (if not, move to ERROR)
     if len(workbook.sheetnames) != 3 or set(workbook.sheetnames) != VALID_SHEETS:
         flash("Error: malformed speadsheet")
-        file_to_errors(filename, f"{filename} doesn't have the expected sheets")
+        file_to_errors(
+            filename, f"{filename} doesn't have the expected sheets"
+        )
         return goto("index")
 
     try:
@@ -137,18 +139,14 @@ def upload():
 
         active_sheet = workbook[VOC_SHEET]
 
-        voc_start = "B"
-
-        print(active_sheet[1])
-
         # finished processing, move file to ARCHIVE
         # and return a view with the data
         file_to_archives(filename)
 
         return render_template("results.html", value=summary.as_dict())
-    except ValidationError as error:
+    except ValidationError as err:
         flash(f"Some of the data in {filename} is invalid!")
-        file_to_errors(filename, error)
+        file_to_errors(filename, err)
         return goto("index")
 
 

@@ -1,18 +1,27 @@
 """
-Utility functions
+Utility functions used throughout the project
 """
 
 import os
 
+from flask import redirect, url_for
+
 from models import db
 from models.summary import Summary, SummaryValidator
-from flask import redirect, url_for
-from .logger import error, info
-
-from utils.constants import UPLOADS, ARCHIVE, ERROR
+from utils.constants import ARCHIVE, ERROR, UPLOADS
+from utils.logger import error, info
 
 
 def goto(view):
+    """
+    Redirect to a page by its view function
+
+    Args:
+        view (str): name of the view function that handles the route
+
+    Returns:
+        Response: Flask response object
+    """
     return redirect(url_for(view))
 
 

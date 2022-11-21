@@ -4,7 +4,6 @@ Unit tests for the Summary model
 from datetime import datetime
 
 import pytest
-from pydantic import ValidationError
 
 from models.summary import Summary, SummaryValidator
 
@@ -59,5 +58,5 @@ def test_invalid_input():
         "csat": 1.15,
     }
 
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         SummaryValidator(**data)

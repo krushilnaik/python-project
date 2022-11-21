@@ -1,2 +1,7 @@
+[MASTER]
+
 disable=
-  no-member
+  no-member,
+  import-error,
+  no-name-in-module,
+  too-few-public-methods

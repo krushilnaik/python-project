@@ -1,3 +1,7 @@
+"""
+Collection of constants used throughout the project
+"""
+
 from pathlib import Path
 
 MONTHS = {
